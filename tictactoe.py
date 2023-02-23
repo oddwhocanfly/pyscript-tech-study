@@ -3,8 +3,6 @@ import pyodide # type: ignore
 from asyncio import sleep, ensure_future
 from random import randint, choice
 
-print('Welcome to Tic Tac Toe!')
-
 async def main():
     init()
     try: await game()
@@ -21,6 +19,7 @@ async def game():
         player_letter, computer_letter = await input_player_letter()
         turn = who_goes_first()
         show('The ' + turn + ' will go first.')
+        await sleep(2)
         # draw([
         #     'q', 'w', 'e',
         #     'a', 's', 'd', 
@@ -35,17 +34,19 @@ async def game():
         while game_is_playing:
             if turn == 'player':
                 draw(board)
-                move = await get_player_move(board)
+                move = await get_player_move(board, player_letter)
                 make_move(board, player_letter, move)
 
                 if is_winner(board, player_letter):
                     draw(board)
                     show('Hooray! You\'ve won the game!')
+                    await sleep(4)
                     game_is_playing = False
                 else:
                     if is_board_full(board):
                         draw(board)
                         show('The game is a tie!')
+                        await sleep(4)
                         break
                     else:
                         turn = 'computer'
@@ -56,11 +57,13 @@ async def game():
                 if is_winner(board, computer_letter):
                     draw(board)
                     show('The computer has beaten you! You lose.')
+                    await sleep(4)
                     game_is_playing = False
                 else:
                     if is_board_full(board):
                         draw(board)
                         show('The game is a tie!')
+                        await sleep(4)
                         break
                     else:
                         turn = 'player'
@@ -137,15 +140,14 @@ async def play_again():
 
 async def input_player_letter():
     letter = ''
-    show('Do you want to be X or O?')
+    show('Welcome to Tic Tac Toe!\n' +
+         'Do you want to be X or O?')
     while not (letter == 'KeyX' or letter == 'KeyO'):
         letter = await get_key()
 
     if letter == 'KeyX':
-        print('You play as X')
         return ['X', 'O']
     else:
-        print('You play as O')
         return ['O', 'X']
 
 def who_goes_first():
@@ -154,7 +156,7 @@ def who_goes_first():
     else:
         return 'player'
 
-async def get_player_move(board):
+async def get_player_move(board, player_letter):
     move = ' '
     positions = [
         'KeyQ', 'KeyW', 'KeyE',
@@ -163,7 +165,8 @@ async def get_player_move(board):
     ]
     while move not in positions or \
         not is_position_free(board, positions.index(move)):
-        show('What is your next move?')
+        show('You play as ' + player_letter + '\n'
+            'What is your next move?')
         move = await get_key()
     return positions.index(move)
 
