@@ -1,7 +1,9 @@
 import js # type: ignore
 import pyodide # type: ignore
 from asyncio import sleep, ensure_future
-from random import randint
+from random import randint, choice
+
+print('Welcome to Tic Tac Toe!')
 
 async def main():
     init()
@@ -69,7 +71,49 @@ def make_move(board, letter, position):
     board[position] = letter
 
 def get_computer_move(board, computer_letter):
-    return board.index(' ')
+    if computer_letter == 'X':
+        player_letter = 'O'
+    else:
+        player_letter = 'X'
+    
+    # Check if Computer can win in the next move.
+    for i in range(0, 9):
+        copy = board.copy()
+        if is_position_free(copy, i):
+            make_move(copy, computer_letter, i)
+            if is_winner(copy, computer_letter):
+                return i
+    
+    # Check  if PLayer could win on their next move, and block them.
+    for i in range(0, 9):
+        copy = board.copy()
+        if is_position_free(copy, i):
+            make_move(copy, player_letter, i)
+            if is_winner(copy, player_letter):
+                return i
+    
+    # Try to take one of the corners, if they are free.
+    move = choose_random_move_from_list(board, [0, 2, 6, 8])
+    if move != None:
+        return move
+    
+    # Try to take the center, if it is free.
+    if is_position_free(board, 4):
+        return 4
+    
+    # Move on one of the sides.
+    return choose_random_move_from_list(board, [1, 3, 5, 7])        
+
+def choose_random_move_from_list(board, moves_list):
+    possible_moves = []
+    for i in moves_list:
+        if is_position_free(board, i):
+            possible_moves.append(i)
+
+    if len(possible_moves) != 0:
+        return choice(possible_moves)
+    else:
+        return None
 
 def is_winner(board, letter):
     b = board
@@ -98,8 +142,10 @@ async def input_player_letter():
         letter = await get_key()
 
     if letter == 'KeyX':
+        print('You play as X')
         return ['X', 'O']
-    else: 
+    else:
+        print('You play as O')
         return ['O', 'X']
 
 def who_goes_first():
