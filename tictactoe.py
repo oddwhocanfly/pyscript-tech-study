@@ -5,6 +5,11 @@ from random import randint
 
 async def main():
     init()
+    try: await game()
+    except Exception as e: 
+        panic(str(e))
+
+async def game():
     while True:
         draw([
             'T', 'I', 'C',
@@ -127,13 +132,15 @@ def draw(board):
     for i in range(0, 9):
         html_board[i].innerText = board[i]
 
-def show(text):
+def show(message):
     status = js.document.getElementById('status')
-    status.innerText = text
+    status.innerText = message
 
 def init():
     on_key_down_proxy = pyodide.ffi.create_proxy(on_key_down)
     js.document.addEventListener('keydown', on_key_down_proxy)
+
+def panic(message): show('Error: ' + message)
 
 async def get_key():
     global get_key_key
