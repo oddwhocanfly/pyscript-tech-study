@@ -1,10 +1,16 @@
 <html>
   <head>
     <link rel='stylesheet' href='https://pyscript.net/latest/pyscript.css'/>
+    <link rel='stylesheet' href='tictactoe.css'/>
     <script defer src='https://pyscript.net/latest/pyscript.min.js'></script>
   </head>
   <body>
-    <pre id="display" class="py-terminal"></pre>
+    <div id='board' style='display: grid; justify-items: center; grid-template-columns: 1fr 1fr 1fr;'>
+      <pre></pre><pre></pre><pre></pre>
+      <pre></pre><pre></pre><pre></pre>
+      <pre></pre><pre></pre><pre></pre>
+    </div>
+    <pre id='status' style="text-align:center;"></pre>
     <py-script src='tictactoe.py'/>
   </body>
 </html>

@@ -1,6 +1,6 @@
-import js #type: ignore
-import pyodide #type: ignore
-import asyncio
+import js # type: ignore
+import pyodide # type: ignore
+from asyncio import sleep, ensure_future
 from random import randint
 
 async def main():
@@ -13,7 +13,7 @@ async def main():
         ])
         player_letter, computer_letter = await input_player_letter()
         turn = who_goes_first()
-        print('The ' + turn + ' will go first.')
+        show('The ' + turn + ' will go first.')
         # draw([
         #     'q', 'w', 'e',
         #     'a', 's', 'd', 
@@ -33,12 +33,12 @@ async def main():
 
                 if is_winner(board, player_letter):
                     draw(board)
-                    print('Hooray! You\'ve won the game!')
+                    show('Hooray! You\'ve won the game!')
                     game_is_playing = False
                 else:
                     if is_board_full(board):
                         draw(board)
-                        print('The game is a tie!')
+                        show('The game is a tie!')
                         break
                     else:
                         turn = 'computer'
@@ -48,12 +48,12 @@ async def main():
 
                 if is_winner(board, computer_letter):
                     draw(board)
-                    print('The computer has beaten you! You lose.')
+                    show('The computer has beaten you! You lose.')
                     game_is_playing = False
                 else:
                     if is_board_full(board):
                         draw(board)
-                        print('The game is a tie!')
+                        show('The game is a tie!')
                         break
                     else:
                         turn = 'player'
@@ -82,13 +82,13 @@ def is_board_full(board):
     return not ' ' in board
 
 async def play_again():
-    print('Do you want to play again? (yes or no)')
+    show('Do you want to play again? (yes or no)')
     choice = await get_key()
     return choice == 'KeyY'
 
 async def input_player_letter():
     letter = ''
-    print('Do you want to be X or O?')
+    show('Do you want to be X or O?')
     while not (letter == 'KeyX' or letter == 'KeyO'):
         letter = await get_key()
 
@@ -112,30 +112,34 @@ async def get_player_move(board):
     ]
     while move not in positions or \
         not is_position_free(board, positions.index(move)):
-        print('What is your next move?')
+        show('What is your next move?')
         move = await get_key()
     return positions.index(move)
 
 def is_position_free(board, position):
     return board[position] == ' '
 
+def draw(board):
+    assert len(board) == 9, '9 board elements expected'
+    html_board = js.document\
+        .getElementById('board')\
+        .getElementsByTagName('*')
+    for i in range(0, 9):
+        html_board[i].innerText = board[i]
+
+def show(text):
+    status = js.document.getElementById('status')
+    status.innerText = text
+
 def init():
     on_key_down_proxy = pyodide.ffi.create_proxy(on_key_down)
     js.document.addEventListener('keydown', on_key_down_proxy)
-
-def draw(board):
-    assert len(board) == 9, '9 board elements expected'
-    display = js.document.getElementById('display')
-    display.innerHTML =\
-        board[0] + ' ' + board[1] + ' ' + board[2] + '<br>' +\
-        board[3] + ' ' + board[4] + ' ' + board[5] + '<br>' +\
-        board[6] + ' ' + board[7] + ' ' + board[8] + '<br>'
 
 async def get_key():
     global get_key_key
     get_key_key = None
     while get_key_key == None:
-        await asyncio.sleep(0)
+        await sleep(0)
     return get_key_key
 
 def on_key_down(event):
@@ -143,4 +147,4 @@ def on_key_down(event):
     get_key_key = event.code
 
 if __name__ == '__main__':
-    asyncio.ensure_future(main())
+    ensure_future(main())
