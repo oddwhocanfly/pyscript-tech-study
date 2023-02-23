@@ -30,8 +30,7 @@ async def game():
             ' ', ' ', ' ', 
             ' ', ' ', ' ', 
         ]
-        game_is_playing = True
-        while game_is_playing:
+        while True:
             if turn == 'player':
                 draw(board)
                 move = await get_player_move(board, player_letter)
@@ -39,14 +38,16 @@ async def game():
 
                 if is_winner(board, player_letter):
                     draw(board)
-                    show('Hooray! You\'ve won the game!')
-                    await sleep(4)
-                    game_is_playing = False
+                    show('Hooray! You\'ve won the game!\n' +
+                         'Press any key to play again')
+                    await get_key()
+                    break
                 else:
                     if is_board_full(board):
                         draw(board)
-                        show('The game is a tie!')
-                        await sleep(4)
+                        show('The game is a tie!\n' +
+                             'Press any key to play again')
+                        await get_key()
                         break
                     else:
                         turn = 'computer'
@@ -56,19 +57,20 @@ async def game():
 
                 if is_winner(board, computer_letter):
                     draw(board)
-                    show('The computer has beaten you! You lose.')
-                    await sleep(4)
-                    game_is_playing = False
+                    show('The computer has beaten you! You lose.\n' +
+                         'Press any key to play again')
+                    await get_key()
+                    break
                 else:
                     if is_board_full(board):
                         draw(board)
-                        show('The game is a tie!')
-                        await sleep(4)
+                        show('The game is a tie!\n' +
+                             'Press any key to play again')
+                        await get_key()
                         break
                     else:
                         turn = 'player'
-        if not await play_again():
-            break
+        
 
 def make_move(board, letter, position):
     board[position] = letter
@@ -133,11 +135,6 @@ def is_winner(board, letter):
 def is_board_full(board):
     return not ' ' in board
 
-async def play_again():
-    show('Do you want to play again? (yes or no)')
-    choice = await get_key()
-    return choice == 'KeyY'
-
 async def input_player_letter():
     letter = ''
     show('Welcome to Tic Tac Toe!\n' +
@@ -165,7 +162,7 @@ async def get_player_move(board, player_letter):
     ]
     while move not in positions or \
         not is_position_free(board, positions.index(move)):
-        show('You play as ' + player_letter + '\n'
+        show('You play as ' + player_letter + '\n' +
             'What is your next move?')
         move = await get_key()
     return positions.index(move)
