@@ -2,6 +2,9 @@
 
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
+HOST = 'localhost'
+PORT = 8000
+
 class NoCacheHTTPRequestHandler(SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
@@ -10,7 +13,7 @@ class NoCacheHTTPRequestHandler(SimpleHTTPRequestHandler):
         SimpleHTTPRequestHandler.end_headers(self)
 
 if __name__ == '__main__':
-    httpd = HTTPServer(('localhost', 8080), NoCacheHTTPRequestHandler)
-    print('http://localhost:8080')
-    httpd.serve_forever()
+    print(f'http://{HOST}:{PORT}')
+    server = HTTPServer((HOST, PORT), NoCacheHTTPRequestHandler)
+    server.serve_forever()
 
