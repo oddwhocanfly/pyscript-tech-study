@@ -1,0 +1,111 @@
+@import url('https://fonts.googleapis.com/css2?family=Darumadrop+One&display=swap');
+
+#tictactoe {
+    margin: auto;
+    width: 60vmin;
+    height: 60vmin;
+    background-color: white;
+}
+
+#tictactoe .field {
+    width: 60vmin;
+    height: 60vmin;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-gap: 1px;
+    background-color: black;
+}
+
+#tictactoe .field .place {
+    aspect-ratio: 1/1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: normal;
+    font-size: 14vmin;
+}
+
+#tictactoe .field.strike-1:after {
+    content: "";
+    width: 50vmin;
+    border-top: 1vmin solid black;
+    position:absolute;
+    transform-origin: 0 0;
+    transform: translate(5vmin, 10vmin);
+}
+
+#tictactoe .field.strike-2:after {
+    content: "";
+    width: 50vmin;
+    border-top: 1vmin solid black;
+    position:absolute;
+    transform-origin: 0 0;
+    transform: translate(5vmin, 30vmin);
+}
+
+#tictactoe .field.strike-3:after {
+    content: "";
+    width: 50vmin;
+    border-top: 1vmin solid black;
+    position:absolute;
+    transform-origin: 0 0;
+    transform: translate(5vmin, 50vmin);
+}
+
+#tictactoe .field.strike-4:after {
+    content: "";
+    height: 50vmin;
+    border-left: 1vmin solid black;
+    position:absolute;
+    transform-origin: 0 0;
+    transform: translate(10vmin, 5vmin);
+}
+
+#tictactoe .field.strike-5:after {
+    content: "";
+    height: 50vmin;
+    border-left: 1vmin solid black;
+    position:absolute;
+    transform-origin: 0 0;
+    transform: translate(30vmin, 5vmin);
+}
+
+#tictactoe .field.strike-6:after {
+    content: "";
+    height: 50vmin;
+    border-left: 1vmin solid black;
+    position:absolute;
+    transform-origin: 0 0;
+    transform: translate(50vmin, 5vmin);
+}
+
+#tictactoe .field.strike-7:after {
+    content: "";
+    width: 70.7107vmin;
+    border-top: 1vmin solid black;
+    position:absolute;
+    transform-origin: 0 0;
+    transform: translate(5vmin, 5vmin) rotate(45deg);
+}
+
+#tictactoe .field.strike-8:after {
+    content: "";
+    width: 70.7107vmin;
+    border-top: 1vmin solid black;
+    position:absolute;
+    transform-origin: 0 0;
+    transform: translate(5vmin, 55vmin) rotate(-45deg);
+}
+
+#tictactoe .message {
+    overflow: visible;
+    margin-top: 4vmin;
+    text-align: center;
+    color: black;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: lighter;
+    font-size: 3.5vmin;
+}
+

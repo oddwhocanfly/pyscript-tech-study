@@ -1,16 +1,28 @@
-<html>
-  <head>
-    <link rel='stylesheet' href='https://pyscript.net/latest/pyscript.css'/>
-    <link rel='stylesheet' href='tictactoe.css'/>
-    <script defer src='https://pyscript.net/latest/pyscript.min.js'></script>
-  </head>
-  <body>
-    <div id='board' style='display: grid; justify-items: center; grid-template-columns: 1fr 1fr 1fr;'>
-      <pre></pre><pre></pre><pre></pre>
-      <pre></pre><pre></pre><pre></pre>
-      <pre></pre><pre></pre><pre></pre>
-    </div>
-    <pre id='status' style="text-align:center;"></pre>
-    <py-script src='tictactoe.py'/>
-  </body>
+<html lang="en">
+    <head>
+        <title>Tic Tac Toe</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1.0">
+        <link rel='stylesheet' href='https://necolas.github.io/normalize.css/latest/normalize.css'>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400&display=swap" rel="stylesheet">
+        <link rel="preconnect" href="https://pyscript.net">
+        <link rel="stylesheet" href="https://pyscript.net/snapshots/2023.11.1.RC3/core.css">
+        <script type="module" src="https://pyscript.net/snapshots/2023.11.1.RC3/core.js"></script>
+        <link rel='stylesheet' href='tictactoe.css'/>
+    </head>
+    <body class='flex' style='height: 100vh; display: flex; flex-flow: column;'>
+        <div id='tictactoe'>
+            <div class='field'>
+                <div class='place'>T</div><div class='place'>I</div><div class='place'>C</div>
+                <div class='place'>T</div><div class='place'>A</div><div class='place'>C</div>
+                <div class='place'>T</div><div class='place'>O</div><div class='place'>E</div>
+            </div>
+            <div class='message'>
+                Loading PyScript
+            </div>
+        </div>
+        <script type="py" src="tictactoe.py"></script>
+    </body>
 </html>

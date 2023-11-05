@@ -1,203 +1,167 @@
-import js # type: ignore
-import pyodide # type: ignore
+from js import document  # type: ignore
+from pyodide import ffi  # type: ignore
 from asyncio import sleep, ensure_future
-from random import randint, choice
+from random import choice, shuffle
+
+last_clicked_element = None
 
 async def main():
-    init()
-    try: await game()
-    except Exception as e: 
-        panic(str(e))
+    on_click_proxy = ffi.create_proxy(on_click)
+    document.addEventListener('click', on_click_proxy)
 
-async def game():
+    field = [
+        'T', 'I', 'C',
+        'T', 'A', 'C',
+        'T', 'O', 'E',
+    ]
+    render(field, 0, 'Click anywhere to start')
+    await next_clicked_element()
+
     while True:
-        draw([
-            'T', 'I', 'C',
-            'T', 'A', 'C', 
-            'T', 'O', 'E', 
-        ])
-        player_letter, computer_letter = await input_player_letter()
-        turn = who_goes_first()
-        show('The ' + turn + ' will go first.')
-        await sleep(2)
-        # draw([
-        #     'q', 'w', 'e',
-        #     'a', 's', 'd', 
-        #     'z', 'x', 'c', 
-        # ])
-        board = [
+        field = [
             ' ', ' ', ' ',
-            ' ', ' ', ' ', 
-            ' ', ' ', ' ', 
+            ' ', ' ', ' ',
+            ' ', ' ', ' ',
         ]
+        pieces = ['X', 'O']
+        shuffle(pieces)
+        player_piece, bot_piece = pieces
+        next_turn = choice(pieces)
+        num_turns = 0
+
         while True:
-            if turn == 'player':
-                draw(board)
-                move = await get_player_move(board, player_letter)
-                make_move(board, player_letter, move)
+            if next_turn == player_piece:
+                render(field, 0, f'Player turn ({player_piece})')
+                place = await next_player_move(field)
+                field[place] = player_piece
 
-                if is_winner(board, player_letter):
-                    draw(board)
-                    show('Hooray! You\'ve won the game!\n' +
-                         'Press any key to play again')
-                    await get_key()
+                line = line_of_three(field, player_piece)
+                if line is not None:
+                    render(field, line, 'Player wins, click to restart')
+                    await next_clicked_element()
                     break
                 else:
-                    if is_board_full(board):
-                        draw(board)
-                        show('The game is a tie!\n' +
-                             'Press any key to play again')
-                        await get_key()
+                    if is_full_field(field):
+                        render(field, 0, 'Tie, click to restart')
+                        await next_clicked_element()
                         break
                     else:
-                        turn = 'computer'
+                        next_turn = bot_piece
             else:
-                move = get_computer_move(board, computer_letter)
-                make_move(board, computer_letter, move)
+                if num_turns > 0:
+                    render(field, 0, f'PyScript turn ({bot_piece})')
+                await sleep(0.7)
+                place = choose_best_move(field, bot_piece, player_piece)
+                field[place] = bot_piece
 
-                if is_winner(board, computer_letter):
-                    draw(board)
-                    show('The computer has beaten you! You lose.\n' +
-                         'Press any key to play again')
-                    await get_key()
+                line = line_of_three(field, bot_piece)
+                if line is not None:
+                    render(field, line, 'PyScript wins, click to restart')
+                    await next_clicked_element()
                     break
                 else:
-                    if is_board_full(board):
-                        draw(board)
-                        show('The game is a tie!\n' +
-                             'Press any key to play again')
-                        await get_key()
+                    if is_full_field(field):
+                        render(field, 0, 'Tie, click to restart')
+                        await next_clicked_element()
                         break
                     else:
-                        turn = 'player'
-        
+                        next_turn = player_piece
 
-def make_move(board, letter, position):
-    board[position] = letter
+            num_turns += 1
 
-def get_computer_move(board, computer_letter):
-    if computer_letter == 'X':
-        player_letter = 'O'
-    else:
-        player_letter = 'X'
-    
-    # Check if Computer can win in the next move.
+async def next_player_move(field):
+    place = None
+    while place is None or not is_free_place(field, place):
+        element = await next_clicked_element()
+        place = getattr(element, '__place_idx', None)
+    return place
+
+def choose_best_move(field, own_piece, opponent_piece):
+    # Try make winning move
     for i in range(0, 9):
-        copy = board.copy()
-        if is_position_free(copy, i):
-            make_move(copy, computer_letter, i)
-            if is_winner(copy, computer_letter):
+        temp_field = field.copy()
+        if is_free_place(temp_field, i):
+            temp_field[i] = own_piece
+            if line_of_three(temp_field, own_piece) is not None:
                 return i
-    
-    # Check  if PLayer could win on their next move, and block them.
+
+    # Block player's winning move
     for i in range(0, 9):
-        copy = board.copy()
-        if is_position_free(copy, i):
-            make_move(copy, player_letter, i)
-            if is_winner(copy, player_letter):
+        temp_field = field.copy()
+        if is_free_place(temp_field, i):
+            temp_field[i] = opponent_piece
+            if line_of_three(temp_field, opponent_piece) is not None:
                 return i
-    
-    # Try to take one of the corners, if they are free.
-    move = choose_random_move_from_list(board, [0, 2, 6, 8])
-    if move != None:
+
+    # Try to take one of the corners
+    move = choose_valid_move(field, [0, 2, 6, 8])
+    if move is not None:
         return move
-    
-    # Try to take the center, if it is free.
-    if is_position_free(board, 4):
+
+    # Try to take the center
+    if is_free_place(field, 4):
         return 4
-    
-    # Move on one of the sides.
-    return choose_random_move_from_list(board, [1, 3, 5, 7])        
 
-def choose_random_move_from_list(board, moves_list):
-    possible_moves = []
-    for i in moves_list:
-        if is_position_free(board, i):
-            possible_moves.append(i)
+    # Move on one of the sides
+    return choose_valid_move(field, [1, 3, 5, 7])
 
-    if len(possible_moves) != 0:
-        return choice(possible_moves)
+def choose_valid_move(field, moves):
+    valid_moves = []
+    for move in moves:
+        if is_free_place(field, move):
+            valid_moves.append(move)
+    if len(valid_moves) != 0:
+        return choice(valid_moves)
     else:
         return None
 
-def is_winner(board, letter):
-    b = board
-    l = letter
-    return ((b[0] == l and b[1] == l and b[2] == l) or # across the top
-        (b[3] == l and b[4] == l and b[5] == l) or # across the middle
-        (b[6] == l and b[7] == l and b[8] == l) or # across the bottom
-        (b[0] == l and b[3] == l and b[6] == l) or # down the left side
-        (b[1] == l and b[4] == l and b[7] == l) or # down the middle
-        (b[2] == l and b[5] == l and b[8] == l) or # down the right side
-        (b[0] == l and b[4] == l and b[8] == l) or # diagonal
-        (b[2] == l and b[4] == l and b[6] == l)) # diagonal
+def line_of_three(field, piece):
+    if   field[0] == piece and field[1] == piece and field[2] == piece: return 1  # noqa
+    elif field[3] == piece and field[4] == piece and field[5] == piece: return 2  # noqa
+    elif field[6] == piece and field[7] == piece and field[8] == piece: return 3  # noqa
+    elif field[0] == piece and field[3] == piece and field[6] == piece: return 4  # noqa
+    elif field[1] == piece and field[4] == piece and field[7] == piece: return 5  # noqa
+    elif field[2] == piece and field[5] == piece and field[8] == piece: return 6  # noqa
+    elif field[0] == piece and field[4] == piece and field[8] == piece: return 7  # noqa
+    elif field[2] == piece and field[4] == piece and field[6] == piece: return 8  # noqa
+    return None
 
-def is_board_full(board):
-    return not ' ' in board
+def is_free_place(field, place):
+    return field[place] == ' '
 
-async def input_player_letter():
-    letter = ''
-    show('Welcome to Tic Tac Toe!\n' +
-         'Do you want to be X or O?')
-    while not (letter == 'KeyX' or letter == 'KeyO'):
-        letter = await get_key()
+def is_full_field(field):
+    return ' ' not in field
 
-    if letter == 'KeyX':
-        return ['X', 'O']
-    else:
-        return ['O', 'X']
-
-def who_goes_first():
-    if randint(0, 1) == 0:
-        return 'computer'
-    else:
-        return 'player'
-
-async def get_player_move(board, player_letter):
-    move = ' '
-    positions = [
-        'KeyQ', 'KeyW', 'KeyE',
-        'KeyA', 'KeyS', 'KeyD', 
-        'KeyZ', 'KeyX', 'KeyC',
-    ]
-    while move not in positions or \
-        not is_position_free(board, positions.index(move)):
-        show('You play as ' + player_letter + '\n' +
-            'What is your next move?')
-        move = await get_key()
-    return positions.index(move)
-
-def is_position_free(board, position):
-    return board[position] == ' '
-
-def draw(board):
-    assert len(board) == 9, '9 board elements expected'
-    html_board = js.document\
-        .getElementById('board')\
-        .getElementsByTagName('*')
+def render(field, strike_line, message):
+    field_elem = document.createElement('div')
+    field_elem.classList.add('field')
+    if strike_line is not None:
+        field_elem.classList.add(f'strike-{strike_line}')
     for i in range(0, 9):
-        html_board[i].innerText = board[i]
+        place = document.createElement('div')
+        place.classList.add('place')
+        place.innerText = field[i]
+        setattr(place, '__place_idx', i)
+        field_elem.appendChild(place)
 
-def show(message):
-    status = js.document.getElementById('status')
-    status.innerText = message
+    message_elem = document.createElement('div')
+    message_elem.classList.add('message')
+    message_elem.innerText = message
 
-def init():
-    on_key_down_proxy = pyodide.ffi.create_proxy(on_key_down)
-    js.document.addEventListener('keydown', on_key_down_proxy)
+    game_elem = document.getElementById('tictactoe')
+    game_elem.replaceChildren(field_elem, message_elem)
 
-def panic(message): show('Error: ' + message)
-
-async def get_key():
-    global get_key_key
-    get_key_key = None
-    while get_key_key == None:
+async def next_clicked_element():
+    global last_clicked_element
+    last_clicked_element = None
+    while last_clicked_element is None:
         await sleep(0)
-    return get_key_key
+    return last_clicked_element
 
-def on_key_down(event):
-    global get_key_key
-    get_key_key = event.code
+def on_click(event):
+    global last_clicked_element
+    last_clicked_element = event.srcElement
 
 if __name__ == '__main__':
     ensure_future(main())
+
